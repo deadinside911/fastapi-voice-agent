@@ -12,12 +12,14 @@ from fastapi import (
     File
 )
 from fastapi.responses import JSONResponse
+
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.auth import verify_qa_token
 from core.database import get_session, supabase_client
 from core.models import CallerRecord
-from core.schemas.call_schemas import CallerLogSchema
+from core.schemas.call_schemas import CallerLogSchema, CallerLogFilterSchema
 
 router = APIRouter(
     prefix="/calls",
@@ -78,6 +80,25 @@ async def upload_recording(file: Annotated[UploadFile, File(...)]):
         "public_url": public_url,
     })
 
+
 @router.get("/search")
-async def search_logs():
-    return {"message": "hello"}
+async def search_logs(filter: Annotated[CallerLogFilterSchema, Depends()], session: DbSession):
+    """
+    Search by optional query parameters
+    """
+
+    query = select(CallerRecord)
+
+    if filter.department is not None:
+        query = query.where(CallerRecord.department == filter.department)
+    
+    if filter.caller_name is not None:
+        query = query.where(CallerRecord.caller_name == filter.caller_name)
+
+    if filter.agent_id is not None:
+        query = query.where(CallerRecord.agent_id == filter.agent_id)
+
+    query = query.order_by(CallerRecord.created_at.desc())
+    results = await session.execute(query)
+
+    return results.scalars().all()
