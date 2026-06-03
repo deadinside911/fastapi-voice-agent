@@ -11,6 +11,7 @@ from fastapi import (
     Depends, 
     File
 )
+from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.auth import verify_qa_token
@@ -38,7 +39,7 @@ async def logs(paylod: CallerLogSchema, session: DbSession):
     await session.commit()
     await session.refresh(record)
 
-    return paylod.model_dump()
+    return JSONResponse(paylod.model_dump(), status_code=status.HTTP_200_OK)
 
 
 @router.post("/upload")
@@ -59,21 +60,23 @@ async def upload_recording(file: Annotated[UploadFile, File(...)]):
         if size > MAX_FILE_SIZE:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
         
+    try:
+        response = supabase_client.storage.from_(BUCKET_NAME).upload(
+            file.filename,
+            file_bytes,
+            {
+                "content-type": file.content_type,
+            }
+        )
+        public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(file.filename)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
     
-    response = supabase_client.storage.from_(BUCKET_NAME).upload(
-        file.filename,
-        file_bytes,
-        {
-            "content-type": file.content_type,
-        }
-    )
-
-    public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(file.filename)
-
-    return {
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={
         "file_name": file.filename,
-        "url": public_url,
-    }
+        "public_url": public_url,
+    })
 
 @router.get("/search")
 async def search_logs():
