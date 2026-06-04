@@ -21,7 +21,10 @@ async def transcripts(request: Request, message: Annotated[str, Field()]):
     """
     Validates if the message matches the signature in the header
     """
-    request_signature = request.headers[WebhookServices.signature_header]
+    try:
+        request_signature = request.headers[WebhookServices.signature_header]
+    except KeyError:
+        return JSONResponse({"message": "Invalid request structure"}, status_code=status.HTTP_400_BAD_REQUEST)
 
     is_valid = WebhookServices.validate_signature(message=message, signature=request_signature)
 
