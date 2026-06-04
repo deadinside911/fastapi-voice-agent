@@ -18,3 +18,11 @@ class CallerRecord(SQLModel, table=True):
 
     created_at: Annotated[datetime | None, Field(default=datetime.now())]
 
+
+class PerformanceAnalyticsRecord(SQLModel, table=True):
+   id: Annotated[int | None, Field(default=None, primary_key=True)]
+
+   client_ip: Annotated[str, Field()]
+   processing_time: Annotated[float, Field()]
+
+   created_at: Annotated[datetime | None, Field(default=datetime.now())]
