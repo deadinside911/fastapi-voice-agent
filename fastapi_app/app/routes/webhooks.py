@@ -1,15 +1,13 @@
 """
+Webhook endpoints
 """
-import hmac
-import hashlib
-import os
-
 from typing import Annotated
 
-from fastapi import APIRouter, status, Header
+from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
-
 from pydantic import Field
+
+from services.webhook_services import WebhookServices
 
 
 router = APIRouter(
@@ -17,23 +15,15 @@ router = APIRouter(
     tags=["Webhooks"],
 )
 
-WEBHOOK_SECRET_KEY = os.getenv("WEBHOOK_SECRET_KEY", "webhook-secret-key").encode("utf-8")
-
 
 @router.post("/transcripts")
-async def transcripts(x_qa_signature: Annotated[str, Header()], message: Annotated[str, Field()]):
+async def transcripts(request: Request, message: Annotated[str, Field()]):
     """
     Validates if the message matches the signature in the header
     """
-    payload = message.encode("utf-8")
+    request_signature = request.headers[WebhookServices.signature_header]
 
-    payload_signature = hmac.new(
-        key=WEBHOOK_SECRET_KEY,
-        msg=payload,
-        digestmod=hashlib.sha256,
-    ).hexdigest()
-
-    is_valid = hmac.compare_digest(x_qa_signature, payload_signature)
+    is_valid = WebhookServices.validate_signature(message=message, signature=request_signature)
 
     if is_valid:
         return JSONResponse({"message": "valid"}, status_code=status.HTTP_200_OK)
