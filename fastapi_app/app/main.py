@@ -17,11 +17,14 @@ from core.database import get_session
 from routes.calls import router as calls_router
 from routes.webhooks import router as webhooks_router
 
+from sockets.status import router as status_router
+
 
 app = FastAPI()
 
 app.include_router(calls_router)
 app.include_router(webhooks_router)
+app.include_router(status_router)
 
 @app.get("/hello-world")
 async def hello(session: Annotated[AsyncSession, Depends(get_session)]):
