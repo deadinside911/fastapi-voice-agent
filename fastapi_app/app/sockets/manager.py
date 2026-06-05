@@ -27,8 +27,11 @@ class WebSocketConnectionManager:
 
 
     def disconnect(self, client_id: int):
-        if client_id in self.active_connections.keys():
-            self.active_connections.pop(client_id)
+        self.active_connections.pop(client_id, None)
+    
+
+    def is_connected(self, client_id: int):
+        return client_id in self.active_connections
 
 
 websocket_connection_manager = WebSocketConnectionManager()
