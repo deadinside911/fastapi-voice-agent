@@ -4,8 +4,8 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
-    AsyncSession,
 )
+from sqlmodel.ext.asyncio.session import AsyncSession
 from supabase import create_client
 
 
@@ -23,14 +23,15 @@ engine = create_async_engine(
     },
 )
 
-SessionLocal = async_sessionmaker(
+async_session_factory = async_sessionmaker(
     bind=engine,
+    class_=AsyncSession,
     expire_on_commit=False,
 )
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with SessionLocal() as session:
+    async with async_session_factory() as session:
         yield session
 
 

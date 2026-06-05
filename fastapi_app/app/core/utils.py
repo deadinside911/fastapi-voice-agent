@@ -2,7 +2,7 @@ import time
 
 from fastapi import Request
 
-from core.database import SessionLocal
+from core.database import async_session_factory
 from core.models import PerformanceAnalyticsRecord
 
 
@@ -28,7 +28,7 @@ async def logging_data_middleware(request: Request, call_next):
 
     performance_log = PerformanceAnalyticsRecord(client_ip=client_ip, processing_time=process_time)
     
-    async with SessionLocal() as session:
+    async with async_session_factory() as session:
         try:
             session.add(performance_log)
             await session.commit()

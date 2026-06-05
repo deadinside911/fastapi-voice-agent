@@ -1,52 +1,54 @@
 """
+Implement the services needed for the /calls endpoints
 """
-from typing import Annotated
-
 from fastapi import (
     HTTPException, 
     UploadFile,
     status,
-    Depends,
 )
 
 from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
 
-from core.database import get_session, supabase_client
+from core.database import supabase_client
 from core.models import CallerRecord
 from core.schemas.call_schemas import CallerLogSchema, CallerLogFilterSchema
 
+from . import DbSession
 
 MAX_FILE_SIZE = 10 * 1024 * 1024
 BUCKET_NAME = "Call Recordings"
 CHUNK_SIZE = 1024
 
-DbSession = Annotated[AsyncSession, Depends(get_session)]
 
 class CallServices:
     """
+    Implement the static methods needed for the /calls endpoints
     """
 
     @staticmethod
     async def create_log(paylod: CallerLogSchema, session: DbSession):
         """
+        Creates a CallerRecord entry and commits it the database
         """
         record = CallerRecord(**paylod.model_dump())
         session.add(record)
 
         await session.commit()
-        await session.refresh(record)
 
         return paylod.model_dump()
 
     @staticmethod
     async def upload_recording(file: UploadFile):
         """
+        Uploads an audio recording to the database
         """
-        size = 0
+        
+        # Checks if the file is an audio file
         if not file.content_type.startswith("audio/"):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type")
 
+        # Streams the file bytes, stops reading if the file is too large
+        size = 0
         file_bytes = b""
         while chunk := await file.read(CHUNK_SIZE):
             size += len(chunk)
@@ -54,6 +56,7 @@ class CallServices:
             if size > MAX_FILE_SIZE:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large")
             
+        # Uploads the file to Supabase
         try:
             supabase_client.storage.from_(BUCKET_NAME).upload(
                 file.filename,
@@ -64,22 +67,25 @@ class CallServices:
         except Exception:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed")
 
+        # Returns the url of the file from Supabase
         return {"file_name": file.filename, "public_url": public_url}
 
     @staticmethod
     async def search(filter_data: CallerLogFilterSchema, session: DbSession):
         """
         """
-        query = select(CallerRecord)
-
-        if filter_data.department is not None:
-            query = query.where(CallerRecord.department == filter_data.department)
-        if filter_data.caller_name is not None:
-            query = query.where(CallerRecord.caller_name == filter_data.caller_name)
-        if filter_data.agent_id is not None:
-            query = query.where(CallerRecord.agent_id == filter_data.agent_id)
-
-        query = query.order_by(CallerRecord.created_at.desc())
-        results = await session.execute(query)
-        return results.scalars().all()
+        filters = {
+            key: value 
+            for key, value in filter_data.model_dump().items() 
+            if value is not None
+        }
+        
+        query = (
+            select(CallerRecord)
+            .filter_by(**filters)
+            .order_by(CallerRecord.created_at.desc())
+        )
+        
+        results = await session.exec(query)
+        return results.all() 
 

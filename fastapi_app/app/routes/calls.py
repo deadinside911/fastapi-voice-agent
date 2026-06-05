@@ -1,11 +1,10 @@
 """
-The routes implemented for /calls
+The endpoints implemented for /calls
 """
 from typing import Annotated
 
 from fastapi import (
     APIRouter, 
-    HTTPException, 
     UploadFile,
     status,
     Depends, 
@@ -13,28 +12,25 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 
-from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
-
 from core.auth import verify_qa_token
-from core.database import get_session, supabase_client
-from core.models import CallerRecord
 from core.schemas.call_schemas import CallerLogSchema, CallerLogFilterSchema
 
 from services.call_services import CallServices, DbSession
 
+# Configures the /calls router, ensures that all incoming requests
+# have a valid header
 router = APIRouter(
     prefix="/calls",
     tags=["Calls"],
     dependencies=[Depends(verify_qa_token)]
 )
 
-MAX_FILE_SIZE = 10 * 1024 * 1024
-BUCKET_NAME = "Call Recordings"
-CHUNK_SIZE = 1024
 
 @router.post("/logs")
 async def logs(payload: CallerLogSchema, session: DbSession):
+    """
+    Creates a log based on the request data and uploads it to the database
+    """
     result = await CallServices.create_log(payload, session)
     return JSONResponse(result, status_code=status.HTTP_200_OK)
 
@@ -42,7 +38,7 @@ async def logs(payload: CallerLogSchema, session: DbSession):
 @router.post("/upload")
 async def upload_recording(file: Annotated[UploadFile, File(...)]):
     """
-    Upload an audio file of maximum size 10 MB
+    Upload an audio file of maximum size 10 MB to a Supabase bucket
     """
     result = await CallServices.upload_recording(file)
     return result
