@@ -1,5 +1,5 @@
 [project]
-name = "fastapi-app"
+name = "voice-qa-agent"
 version = "0.1.0"
 description = "Voice QA project"
 authors = [
@@ -26,3 +26,6 @@ dependencies = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+package-mode = false
