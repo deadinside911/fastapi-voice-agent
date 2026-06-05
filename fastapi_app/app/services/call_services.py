@@ -13,6 +13,8 @@ from core.database import supabase_client
 from core.models import CallerRecord
 from core.schemas.call_schemas import CallerLogSchema, CallerLogFilterSchema
 
+from sockets.manager import websocket_connection_manager
+
 from . import DbSession
 
 MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -26,19 +28,22 @@ class CallServices:
     """
 
     @staticmethod
-    async def create_log(paylod: CallerLogSchema, session: DbSession):
+    async def create_log(paylod: CallerLogSchema, session: DbSession, client_id: int):
         """
         Creates a CallerRecord entry and commits it the database
         """
+
+        await websocket_connection_manager.send_message("Creating record", client_id)
         record = CallerRecord(**paylod.model_dump())
         session.add(record)
-
+        
+        await websocket_connection_manager.send_message("Updating database", client_id)
         await session.commit()
 
         return paylod.model_dump()
 
     @staticmethod
-    async def upload_recording(file: UploadFile):
+    async def upload_recording(file: UploadFile, client_id: int):
         """
         Uploads an audio recording to the database
         """
@@ -47,17 +52,23 @@ class CallServices:
         if not file.content_type.startswith("audio/"):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type")
 
+        await websocket_connection_manager.send_message("Valid file type", client_id)
+
         # Streams the file bytes, stops reading if the file is too large
         size = 0
         file_bytes = b""
+
+        await websocket_connection_manager.send_message("Uploading file", client_id)
         while chunk := await file.read(CHUNK_SIZE):
             size += len(chunk)
             file_bytes += chunk
             if size > MAX_FILE_SIZE:
+                await websocket_connection_manager.send_message("File too large", client_id)
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large")
             
         # Uploads the file to Supabase
         try:
+            await websocket_connection_manager.send_message("Generating URL...", client_id)
             supabase_client.storage.from_(BUCKET_NAME).upload(
                 file.filename,
                 file_bytes,
@@ -65,13 +76,15 @@ class CallServices:
             )
             public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(file.filename)
         except Exception:
+            await websocket_connection_manager.send_message("Failed", client_id)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed")
 
+        await websocket_connection_manager.send_message("Done.", client_id)
         # Returns the url of the file from Supabase
         return {"file_name": file.filename, "public_url": public_url}
 
     @staticmethod
-    async def search(filter_data: CallerLogFilterSchema, session: DbSession):
+    async def search(filter_data: CallerLogFilterSchema, session: DbSession, client_id: int):
         """
         """
         filters = {
@@ -86,6 +99,9 @@ class CallServices:
             .order_by(CallerRecord.created_at.desc())
         )
         
+        await websocket_connection_manager.send_message("Fetching results", client_id)
         results = await session.exec(query)
+        
+        await websocket_connection_manager.send_message("Done.", client_id)
         return results.all() 
 

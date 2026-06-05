@@ -2,25 +2,33 @@ from fastapi import WebSocket
 
 class WebSocketConnectionManager:
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        self.active_connections: dict[int, WebSocket] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, client_id: int):
         await websocket.accept()
-        self.active_connections.append(websocket)
+
+        self.active_connections[client_id] = websocket
         print("Connected")
+
+    
+    async def send_message(self, message: str, client_id: int):
+        try:
+            await self.active_connections[client_id].send_text(message)
+        except Exception:
+            print("Failed to send message")
 
 
     async def send_broadcast(self, message: str):
-        for connection in self.active_connections:
+        for connection in self.active_connections.items():
             try:
                 await connection.send_text(message)
             except Exception:
                 pass
 
 
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
+    def disconnect(self, client_id: int):
+        if client_id in self.active_connections.keys():
+            self.active_connections.pop(client_id)
 
 
 websocket_connection_manager = WebSocketConnectionManager()

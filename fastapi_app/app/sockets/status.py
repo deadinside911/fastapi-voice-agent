@@ -1,4 +1,5 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from typing import Annotated
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Header
 
 from .manager import websocket_connection_manager
 
@@ -9,14 +10,14 @@ router = APIRouter(
 
 
 @router.websocket("/status")
-async def status(websocket: WebSocket):
-    await websocket_connection_manager.connect(websocket)
+async def status(websocket: WebSocket, client_id: Annotated[int, Header()]):
+    await websocket_connection_manager.connect(websocket, client_id)
 
     try:
         while True:
             data = await websocket.receive_text()
             await websocket_connection_manager.send_broadcast(f"Recieved {data}")
     except WebSocketDisconnect:
-        websocket_connection_manager.disconnect(websocket)
-        print("Disconnected gracefully")
+        websocket_connection_manager.disconnect(client_id)
+        print("Disconnected.")
 
