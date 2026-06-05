@@ -9,7 +9,7 @@ from fastapi import (
 
 from sqlmodel import select
 
-from core.database import supabase_client
+from core.database import supabase_client, async_supabase_client
 from core.models import CallerRecord
 from core.schemas.call_schemas import CallerLogSchema, CallerLogFilterSchema
 
@@ -69,7 +69,7 @@ class CallServices:
         # Uploads the file to Supabase
         try:
             await websocket_connection_manager.send_message("Generating URL...", client_id)
-            supabase_client.storage.from_(BUCKET_NAME).upload(
+            await async_supabase_client.storage.from_(BUCKET_NAME).upload(
                 file.filename,
                 file_bytes,
                 {"content-type": file.content_type}

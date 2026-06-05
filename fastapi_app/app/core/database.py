@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
 )
 from sqlmodel.ext.asyncio.session import AsyncSession
-from supabase import create_client
+from supabase import create_client, create_async_client
 
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -39,3 +39,9 @@ supabase_client = create_client(
     supabase_url=SUPABASE_URL,
     supabase_key=SUPABASE_SERVICE_KEY
 )
+
+async_supabase_client = create_async_client(
+    supabase_url=SUPABASE_URL,
+    supabase_key=SUPABASE_SERVICE_KEY,
+)
+
