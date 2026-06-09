@@ -7,7 +7,7 @@ steps:
       - -t
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:latest'
       - -f
-      - server/docker/Dockerfile.prod
+      - fastapi_app/server/docker/Dockerfile.prod
       - .
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}']
