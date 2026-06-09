@@ -1,8 +1,8 @@
-FROM python:3.11-slim AS builder
+FROM python:3.14-slim AS builder
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    POETRY_VERSION=1.8.2 \
+    POETRY_VERSION=2.4.1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1
@@ -18,26 +18,35 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock* ./
+COPY pyproject.toml poetry.lock ./
 
-# Install without dev dependencies 
-RUN poetry install --without dev
+RUN poetry --version
+RUN poetry install
 
+# Runtime
 FROM python:3.11-slim AS runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+# Non-root user
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
 WORKDIR /app
 
-# Copy the virtual environment created in the builder stage
 COPY --from=builder /app/.venv /app/.venv
 
-# Copy application source code
-COPY . .
+# Copy only app source, not tests/configs/secrets
+COPY app/ ./app/
 
-# Expose the production port
+RUN chown -R appuser:appgroup /app
+USER appuser
+
 EXPOSE 8080
 
-# Run with uvicorn
-CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["/app/.venv/bin/gunicorn", "app.main:app", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--workers", "4", \
+     "--bind", "0.0.0.0:8080", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-"]
