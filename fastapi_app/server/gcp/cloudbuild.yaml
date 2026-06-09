@@ -1,5 +1,4 @@
 steps:
-  # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - build
@@ -9,13 +8,9 @@ steps:
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:latest'
       - -f
       - server/docker/Dockerfile.prod
-      - .                              # build context is repo root — pyproject.toml and app/ are here
-
-  # 2. Push both tags
+      - .
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}']
-
-  # 3. Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -34,7 +29,7 @@ steps:
 
 options:
   logging: GCS_ONLY
-  logsBucket: 'gs://${PROJECT_ID}_cloudbuild_logs'
+  logsBucket: 'gs://curious-set-498810-n8_cloudbuild_logs'
   machineType: E2_HIGHCPU_8
 
 timeout: 1200s
