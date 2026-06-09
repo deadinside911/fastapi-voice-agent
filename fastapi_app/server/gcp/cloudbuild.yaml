@@ -8,7 +8,7 @@ steps:
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:latest'
       - -f
       - fastapi_app/server/docker/Dockerfile.prod
-      - .
+      - fastapi_app/
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}']
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
