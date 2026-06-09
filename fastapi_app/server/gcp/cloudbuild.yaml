@@ -32,11 +32,6 @@ steps:
       - --min-instances=1
       - --max-instances=2
 
-substitutions:
-  _REGION: us-central1
-  _REPO: my-repo
-  _SERVICE: my-fastapi-service
-
 options:
   logging: CLOUD_LOGGING_ONLY
   machineType: E2_HIGHCPU_8
