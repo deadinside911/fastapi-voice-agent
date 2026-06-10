@@ -65,7 +65,7 @@ class CallServices:
             size += len(chunk)
             file_bytes += chunk
             if size > MAX_FILE_SIZE:
-                await websocket_connection_manager.send_message("File too large", client_id)
+                # await websocket_connection_manager.send_message("File too large", client_id)
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large")
             
         # Uploads the file to Supabase
