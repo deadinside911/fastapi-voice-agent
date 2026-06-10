@@ -5,9 +5,6 @@ BASE_DIR = Path(__file__).resolve()
 path = BASE_DIR.parent.parent / ".env.dev"
 loaded = load_dotenv(dotenv_path=path)
 
-if not loaded:
-    raise RuntimeError("Failed to load environment variables")
-
 
 from typing import Annotated
 from fastapi import FastAPI, Depends
