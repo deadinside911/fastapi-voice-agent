@@ -54,13 +54,13 @@ class CallServices:
         if not file.content_type.startswith("audio/"):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type")
 
-        await websocket_connection_manager.send_message("Valid file type", client_id)
+        # await websocket_connection_manager.send_message("Valid file type", client_id)
 
         # Streams the file bytes, stops reading if the file is too large
         size = 0
         file_bytes = b""
 
-        await websocket_connection_manager.send_message("Uploading file", client_id)
+        # await websocket_connection_manager.send_message("Uploading file", client_id)
         while chunk := await file.read(CHUNK_SIZE):
             size += len(chunk)
             file_bytes += chunk
@@ -70,7 +70,7 @@ class CallServices:
             
         # Uploads the file to Supabase
         try:
-            await websocket_connection_manager.send_message("Generating URL...", client_id)
+            # await websocket_connection_manager.send_message("Generating URL...", client_id)
             await async_supabase_client.storage.from_(BUCKET_NAME).upload(
                 file.filename,
                 file_bytes,
@@ -78,10 +78,10 @@ class CallServices:
             )
             public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(file.filename)
         except Exception:
-            await websocket_connection_manager.send_message("Failed", client_id)
+            # await websocket_connection_manager.send_message("Failed", client_id)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed")
 
-        await websocket_connection_manager.send_message("Done.", client_id)
+        # await websocket_connection_manager.send_message("Done.", client_id)
 
         gemini_response = client.models.generate_content(
             model="gemini-2.5-flash",
