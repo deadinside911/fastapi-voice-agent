@@ -22,7 +22,10 @@ from sockets.status import router as status_router
 
 
 app = FastAPI()
-client = genai.Client()
+client = genai.Client(
+    vertexai=True,
+    project="curious-set-498810-n8"
+)
 
 app.middleware("http")(logging_data_middleware)
 
