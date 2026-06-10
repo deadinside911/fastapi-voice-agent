@@ -10,8 +10,6 @@ from typing import Annotated
 from fastapi import FastAPI, Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from google import genai
-
 from core.database import get_session
 from core.utils import logging_data_middleware
 
@@ -20,12 +18,10 @@ from routes.webhooks import router as webhooks_router
 
 from sockets.status import router as status_router
 
+from services import client
 
 app = FastAPI()
-client = genai.Client(
-    vertexai=True,
-    project="curious-set-498810-n8"
-)
+
 
 app.middleware("http")(logging_data_middleware)
 

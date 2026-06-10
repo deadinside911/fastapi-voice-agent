@@ -15,7 +15,7 @@ from core.schemas.call_schemas import CallerLogSchema, CallerLogFilterSchema
 
 from sockets.manager import websocket_connection_manager
 
-from main import client
+from . import client
 
 from . import DbSession
 
