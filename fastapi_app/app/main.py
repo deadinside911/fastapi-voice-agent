@@ -10,6 +10,8 @@ from typing import Annotated
 from fastapi import FastAPI, Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from google import genai
+
 from core.database import get_session
 from core.utils import logging_data_middleware
 
@@ -20,6 +22,7 @@ from sockets.status import router as status_router
 
 
 app = FastAPI()
+client = genai.Client()
 
 app.middleware("http")(logging_data_middleware)
 
@@ -31,3 +34,12 @@ app.include_router(status_router)
 @app.get("/hello-world")
 async def hello(session: Annotated[AsyncSession, Depends(get_session)]):
     return {"message": "hello,world!"}
+
+
+@app.get("/generate")
+def generate():
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents="Say hello in one word"
+    )
+    return {"text": response.text}
