@@ -22,7 +22,7 @@ steps:
       - --platform=managed
       - --allow-unauthenticated
       - --port=8080
-      - --memory=1GiB
+      - --memory=1Gi
       - --cpu=1
       - --min-instances=1
       - --max-instances=2
