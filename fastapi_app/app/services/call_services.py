@@ -15,6 +15,8 @@ from core.schemas.call_schemas import CallerLogSchema, CallerLogFilterSchema
 
 from sockets.manager import websocket_connection_manager
 
+from main import client
+
 from . import DbSession
 
 MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -80,8 +82,16 @@ class CallServices:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed")
 
         await websocket_connection_manager.send_message("Done.", client_id)
+
+        gemini_response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                "Transcrible this audio and prepare a 2 line text summary",
+                public_url,
+            ]
+        )
         # Returns the url of the file from Supabase
-        return {"file_name": file.filename, "public_url": public_url}
+        return {"file_name": file.filename, "public_url": public_url, "transcription": gemini_response}
 
     @staticmethod
     async def search(filter_data: CallerLogFilterSchema, session: DbSession, client_id: int):
