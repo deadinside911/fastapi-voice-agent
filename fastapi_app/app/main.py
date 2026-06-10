@@ -43,6 +43,6 @@ async def hello(session: Annotated[AsyncSession, Depends(get_session)]):
 def generate():
     response = client.models.generate_content(
         model="gemini-2.5-flash",
-        contents="Say hello in one word"
+        contents="Write one line about any topic"
     )
     return {"text": response.text}
