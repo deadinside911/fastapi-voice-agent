@@ -78,17 +78,17 @@ class CallServices:
         audio_file = client.files.upload(file=temp_audio_filepath)
 
         # Uploads the file to Supabase
-        try:
-            # await websocket_connection_manager.send_message("Generating URL...", client_id)
-            await async_supabase_client.storage.from_(BUCKET_NAME).upload(
-                file.filename,
-                file_bytes,
-                {"content-type": file.content_type}
-            )
-            public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(file.filename)
-        except Exception:
-            # await websocket_connection_manager.send_message("Failed", client_id)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed to supabase")
+        # try:
+        #     # await websocket_connection_manager.send_message("Generating URL...", client_id)
+        #     await async_supabase_client.storage.from_(BUCKET_NAME).upload(
+        #         file.filename,
+        #         file_bytes,
+        #         {"content-type": file.content_type}
+        #     )
+        #     public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(file.filename)
+        # except Exception:
+        #     # await websocket_connection_manager.send_message("Failed", client_id)
+        #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed to supabase")
 
         # await websocket_connection_manager.send_message("Done.", client_id)
 
@@ -99,7 +99,7 @@ class CallServices:
             ]
         )
         # Returns the url of the file from Supabase
-        return {"file_name": file.filename, "public_url": public_url, "transcription": gemini_response}
+        return {"file_name": file.filename, "transcription": gemini_response}
 
     @staticmethod
     async def search(filter_data: CallerLogFilterSchema, session: DbSession, client_id: int):
