@@ -16,6 +16,5 @@ from core.database import get_session
 DbSession = Annotated[AsyncSession, Depends(get_session)]
 
 client = genai.Client(
-    project="curious-set-498810-n8",
     api_key=os.getenv("GEMINI_API_KEY"),
 )
