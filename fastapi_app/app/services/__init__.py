@@ -9,6 +9,7 @@ from fastapi import Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from google import genai
+from google.genai.types import GenerateContentConfig
 
 from core.database import get_session
 

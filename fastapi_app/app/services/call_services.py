@@ -1,6 +1,9 @@
 """
 Implement the services needed for the /calls endpoints
 """
+from uuid import uuid4
+from pathlib import Path
+
 from fastapi import (
     HTTPException, 
     UploadFile,
@@ -17,7 +20,7 @@ from core.schemas.call_schemas import CallerLogSchema, CallerLogFilterSchema
 
 from sockets.manager import websocket_connection_manager
 
-from . import client
+from . import client, GenerateContentConfig
 
 from . import DbSession
 
@@ -77,15 +80,18 @@ class CallServices:
 
         # audio_file = client.files.upload(file=temp_audio_filepath)
         async_supabase_client = await get_async_supabase_client()
+
+        path = Path(file.filename)
+        filename = f"{path.stem}{str(uuid4())}{path.suffix}"
         # Uploads the file to Supabase
         try:
             # await websocket_connection_manager.send_message("Generating URL...", client_id)
             await async_supabase_client.storage.from_(BUCKET_NAME).upload(
-                file.filename,
+                filename,
                 file_bytes,
                 {"content-type": file.content_type}
             )
-            public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(file.filename)
+            public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(filename)
         except Exception as e:
             print(e)
             # await websocket_connection_manager.send_message("Failed", client_id)
@@ -96,12 +102,30 @@ class CallServices:
         gemini_response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=[
-                "Transcrible this audio and prepare a 2 line text summary",
+                "Transcribe conversations in this audio if any, describe any sounds or music if any, and summarise your findings.",
                 public_url,
-            ]
+            ],
+            config=GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema={
+                    "type": "object",
+                    "properties": {
+                        "transcript": {
+                            "type": "string"
+                        },
+                        "summary": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "transcript",
+                        "summary"
+                    ]
+                }
+            ),
         )
         # Returns the url of the file from Supabase
-        return {"file_name": file.filename, "transcription": gemini_response, "public_url": public_url}
+        return {"file_name": filename, "transcription": gemini_response, "public_url": public_url}
 
     @staticmethod
     async def search(filter_data: CallerLogFilterSchema, session: DbSession, client_id: int):
