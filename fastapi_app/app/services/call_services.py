@@ -9,6 +9,8 @@ from fastapi import (
 
 from sqlmodel import select
 
+import tempfile
+
 from core.database import supabase_client, async_supabase_client
 from core.models import CallerRecord
 from core.schemas.call_schemas import CallerLogSchema, CallerLogFilterSchema
@@ -67,7 +69,14 @@ class CallServices:
             if size > MAX_FILE_SIZE:
                 # await websocket_connection_manager.send_message("File too large", client_id)
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large")
-            
+        
+        temp_audio_filepath = ""
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_audio_file:
+            temp_audio_file.write(file_bytes)
+            temp_audio_filepath = temp_audio_file.name
+
+        audio_file = client.files.upload(file=temp_audio_filepath)
+
         # Uploads the file to Supabase
         try:
             # await websocket_connection_manager.send_message("Generating URL...", client_id)
@@ -79,7 +88,7 @@ class CallServices:
             public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(file.filename)
         except Exception:
             # await websocket_connection_manager.send_message("Failed", client_id)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed to supabase")
 
         # await websocket_connection_manager.send_message("Done.", client_id)
 
