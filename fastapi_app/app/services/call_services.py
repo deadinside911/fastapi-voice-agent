@@ -75,7 +75,7 @@ class CallServices:
             temp_audio_file.write(file_bytes)
             temp_audio_filepath = temp_audio_file.name
 
-        audio_file = client.files.upload(file=temp_audio_filepath)
+        # audio_file = client.files.upload(file=temp_audio_filepath)
 
         # Uploads the file to Supabase
         try:
