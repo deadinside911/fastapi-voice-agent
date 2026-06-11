@@ -11,7 +11,7 @@ from sqlmodel import select
 
 import tempfile
 
-from core.database import supabase_client, async_supabase_client
+from core.database import supabase_client, get_async_supabase_client
 from core.models import CallerRecord
 from core.schemas.call_schemas import CallerLogSchema, CallerLogFilterSchema
 
@@ -75,20 +75,21 @@ class CallServices:
             temp_audio_file.write(file_bytes)
             temp_audio_filepath = temp_audio_file.name
 
-        audio_file = client.files.upload(file=temp_audio_filepath)
-
+        # audio_file = client.files.upload(file=temp_audio_filepath)
+        async_supabase_client = await get_async_supabase_client()
         # Uploads the file to Supabase
-        # try:
-        #     # await websocket_connection_manager.send_message("Generating URL...", client_id)
-        #     await async_supabase_client.storage.from_(BUCKET_NAME).upload(
-        #         file.filename,
-        #         file_bytes,
-        #         {"content-type": file.content_type}
-        #     )
-        #     public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(file.filename)
-        # except Exception:
-        #     # await websocket_connection_manager.send_message("Failed", client_id)
-        #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed to supabase")
+        try:
+            # await websocket_connection_manager.send_message("Generating URL...", client_id)
+            await async_supabase_client.storage.from_(BUCKET_NAME).upload(
+                file.filename,
+                file_bytes,
+                {"content-type": file.content_type}
+            )
+            public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(file.filename)
+        except Exception as e:
+            print(e)
+            # await websocket_connection_manager.send_message("Failed", client_id)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed to supabase")
 
         # await websocket_connection_manager.send_message("Done.", client_id)
 
@@ -96,10 +97,11 @@ class CallServices:
             model="gemini-2.5-flash",
             contents=[
                 "Transcrible this audio and prepare a 2 line text summary",
+                public_url,
             ]
         )
         # Returns the url of the file from Supabase
-        return {"file_name": file.filename, "transcription": gemini_response}
+        return {"file_name": file.filename, "transcription": gemini_response, "public_url": public_url}
 
     @staticmethod
     async def search(filter_data: CallerLogFilterSchema, session: DbSession, client_id: int):

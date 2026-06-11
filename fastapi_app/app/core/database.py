@@ -40,7 +40,8 @@ supabase_client = create_client(
     supabase_key=SUPABASE_SERVICE_KEY
 )
 
-async_supabase_client = create_async_client(
+async def get_async_supabase_client():
+    return await create_async_client(
     supabase_url=SUPABASE_URL,
     supabase_key=SUPABASE_SERVICE_KEY,
 )
