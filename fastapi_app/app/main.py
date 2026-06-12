@@ -15,6 +15,7 @@ from core.utils import logging_data_middleware
 
 from routes.calls import router as calls_router
 from routes.webhooks import router as webhooks_router
+from routes.chat import router as chat_router
 
 from sockets.status import router as status_router
 
@@ -28,7 +29,7 @@ app.middleware("http")(logging_data_middleware)
 app.include_router(calls_router)
 app.include_router(webhooks_router)
 app.include_router(status_router)
-
+app.include_router(chat_router)
 
 @app.get("/hello-world")
 async def hello(session: Annotated[AsyncSession, Depends(get_session)]):
@@ -38,7 +39,6 @@ async def hello(session: Annotated[AsyncSession, Depends(get_session)]):
 @app.get("/generate")
 def generate():
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents="Write one line about any topic"
+        model="gemini-2.5-flash", contents="Write one line about any topic"
     )
     return {"text": response.text}
