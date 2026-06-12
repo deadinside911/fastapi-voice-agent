@@ -4,10 +4,10 @@ The endpoints implemented for /calls
 from typing import Annotated
 
 from fastapi import (
-    APIRouter, 
+    APIRouter,
     UploadFile,
     status,
-    Depends, 
+    Depends,
     File,
     Header,
 )
@@ -23,12 +23,14 @@ from services.call_services import CallServices, DbSession
 router = APIRouter(
     prefix="/calls",
     tags=["Calls"],
-    dependencies=[Depends(verify_qa_token), Depends(verify_client_id)]
+    dependencies=[Depends(verify_qa_token), Depends(verify_client_id)],
 )
 
 
 @router.post("/logs")
-async def logs(payload: CallerLogSchema, session: DbSession, client_id: Annotated[int, Header(...)]):
+async def logs(
+    payload: CallerLogSchema, session: DbSession, client_id: Annotated[int, Header(...)]
+):
     """
     Creates a log based on the request data and uploads it to the database
     """
@@ -37,7 +39,9 @@ async def logs(payload: CallerLogSchema, session: DbSession, client_id: Annotate
 
 
 @router.post("/upload")
-async def upload_recording(file: Annotated[UploadFile, File(...)], client_id: Annotated[int, Header(...)]):
+async def upload_recording(
+    file: Annotated[UploadFile, File(...)], client_id: Annotated[int, Header(...)]
+):
     """
     Upload an audio file of maximum size 10 MB to a Supabase bucket
     """
@@ -46,7 +50,11 @@ async def upload_recording(file: Annotated[UploadFile, File(...)], client_id: An
 
 
 @router.get("/search")
-async def search_logs(filter: Annotated[CallerLogFilterSchema, Depends()], session: DbSession, client_id: Annotated[int, Header(...)]):
+async def search_logs(
+    filter: Annotated[CallerLogFilterSchema, Depends()],
+    session: DbSession,
+    client_id: Annotated[int, Header(...)],
+):
     """
     Search by optional query parameters
     """

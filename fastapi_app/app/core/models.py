@@ -20,9 +20,17 @@ class CallerRecord(SQLModel, table=True):
 
 
 class PerformanceAnalyticsRecord(SQLModel, table=True):
-   id: Annotated[int | None, Field(default=None, primary_key=True)]
+    id: Annotated[int | None, Field(default=None, primary_key=True)]
 
-   client_ip: Annotated[str, Field()]
-   processing_time: Annotated[float, Field()]
+    client_ip: Annotated[str, Field()]
+    processing_time: Annotated[float, Field()]
 
-   created_at: Annotated[datetime | None, Field(default=datetime.now())]
+    created_at: Annotated[datetime | None, Field(default=datetime.now())]
+
+
+class ChatHistory(SQLModel, table=True):
+    id: Annotated[int | None, Field(default=None, primary_key=True)]
+
+    role: Annotated[str, Field()]
+
+    content: Annotated[str, Field()]

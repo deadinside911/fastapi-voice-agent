@@ -20,4 +20,3 @@ async def status(websocket: WebSocket, client_id: Annotated[int, Header()]):
     except WebSocketDisconnect:
         websocket_connection_manager.disconnect(client_id)
         print("Disconnected.")
-

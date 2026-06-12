@@ -5,7 +5,7 @@ from uuid import uuid4
 from pathlib import Path
 
 from fastapi import (
-    HTTPException, 
+    HTTPException,
     UploadFile,
     status,
 )
@@ -43,7 +43,7 @@ class CallServices:
         await websocket_connection_manager.send_message("Creating record", client_id)
         record = CallerRecord(**paylod.model_dump())
         session.add(record)
-        
+
         await websocket_connection_manager.send_message("Updating database", client_id)
         await session.commit()
 
@@ -54,10 +54,12 @@ class CallServices:
         """
         Uploads an audio recording to the database
         """
-        
+
         # Checks if the file is an audio file
         if not file.content_type.startswith("audio/"):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type"
+            )
 
         # await websocket_connection_manager.send_message("Valid file type", client_id)
 
@@ -71,10 +73,14 @@ class CallServices:
             file_bytes += chunk
             if size > MAX_FILE_SIZE:
                 # await websocket_connection_manager.send_message("File too large", client_id)
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large")
-        
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="File too large"
+                )
+
         temp_audio_filepath = ""
-        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_audio_file:
+        with tempfile.NamedTemporaryFile(
+            suffix=".mp3", delete=False
+        ) as temp_audio_file:
             temp_audio_file.write(file_bytes)
             temp_audio_filepath = temp_audio_file.name
 
@@ -87,15 +93,18 @@ class CallServices:
         try:
             # await websocket_connection_manager.send_message("Generating URL...", client_id)
             await async_supabase_client.storage.from_(BUCKET_NAME).upload(
-                filename,
-                file_bytes,
-                {"content-type": file.content_type}
+                filename, file_bytes, {"content-type": file.content_type}
             )
-            public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(filename)
+            public_url = supabase_client.storage.from_(BUCKET_NAME).get_public_url(
+                filename
+            )
         except Exception as e:
             print(e)
             # await websocket_connection_manager.send_message("Failed", client_id)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload failed to supabase")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Upload failed to supabase",
+            )
 
         # await websocket_connection_manager.send_message("Done.", client_id)
 
@@ -110,42 +119,39 @@ class CallServices:
                 response_schema={
                     "type": "object",
                     "properties": {
-                        "transcript": {
-                            "type": "string"
-                        },
-                        "summary": {
-                            "type": "string"
-                        }
+                        "transcript": {"type": "string"},
+                        "summary": {"type": "string"},
                     },
-                    "required": [
-                        "transcript",
-                        "summary"
-                    ]
-                }
+                    "required": ["transcript", "summary"],
+                },
             ),
         )
         # Returns the url of the file from Supabase
-        return {"file_name": filename, "transcription": gemini_response, "public_url": public_url}
+        return {
+            "file_name": filename,
+            "transcription": gemini_response,
+            "public_url": public_url,
+        }
 
     @staticmethod
-    async def search(filter_data: CallerLogFilterSchema, session: DbSession, client_id: int):
-        """
-        """
+    async def search(
+        filter_data: CallerLogFilterSchema, session: DbSession, client_id: int
+    ):
+        """ """
         filters = {
-            key: value 
-            for key, value in filter_data.model_dump().items() 
+            key: value
+            for key, value in filter_data.model_dump().items()
             if value is not None
         }
-        
+
         query = (
             select(CallerRecord)
             .filter_by(**filters)
             .order_by(CallerRecord.created_at.desc())
         )
-        
+
         await websocket_connection_manager.send_message("Fetching results", client_id)
         results = await session.exec(query)
-        
-        await websocket_connection_manager.send_message("Done.", client_id)
-        return results.all() 
 
+        await websocket_connection_manager.send_message("Done.", client_id)
+        return results.all()

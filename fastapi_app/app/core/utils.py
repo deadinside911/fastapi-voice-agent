@@ -7,27 +7,28 @@ from core.models import PerformanceAnalyticsRecord
 
 
 async def logging_data_middleware(request: Request, call_next):
-    """
-    """
-    
+    """ """
+
     start_time = time.perf_counter()
     x_forwarded_for = request.headers.get("x-forwarded-for")
 
     client_ip = ""
     if x_forwarded_for:
-       client_ip = x_forwarded_for.split(",")[0].strip()
+        client_ip = x_forwarded_for.split(",")[0].strip()
     else:
         if request.client:
             client_ip = request.client.host
         else:
-            client_ip = "Unknown" 
+            client_ip = "Unknown"
 
     response = await call_next(request)
 
     process_time = time.perf_counter() - start_time
 
-    performance_log = PerformanceAnalyticsRecord(client_ip=client_ip, processing_time=process_time)
-    
+    performance_log = PerformanceAnalyticsRecord(
+        client_ip=client_ip, processing_time=process_time
+    )
+
     async with async_session_factory() as session:
         try:
             session.add(performance_log)

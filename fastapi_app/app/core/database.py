@@ -18,9 +18,7 @@ engine = create_async_engine(
     DATABASE_URL,
     echo=True,
     pool_pre_ping=True,
-    connect_args={
-        "statement_cache_size": 0
-    },
+    connect_args={"statement_cache_size": 0},
 )
 
 async_session_factory = async_sessionmaker(
@@ -36,13 +34,12 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 supabase_client = create_client(
-    supabase_url=SUPABASE_URL,
-    supabase_key=SUPABASE_SERVICE_KEY
+    supabase_url=SUPABASE_URL, supabase_key=SUPABASE_SERVICE_KEY
 )
+
 
 async def get_async_supabase_client():
     return await create_async_client(
-    supabase_url=SUPABASE_URL,
-    supabase_key=SUPABASE_SERVICE_KEY,
-)
-
+        supabase_url=SUPABASE_URL,
+        supabase_key=SUPABASE_SERVICE_KEY,
+    )

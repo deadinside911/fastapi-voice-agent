@@ -11,16 +11,10 @@ from core.models import SQLModel
 
 TEST_DATABASE_URL = "sqlite:///./test.db"
 
-engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
+engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 
-TestingSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
@@ -37,9 +31,7 @@ def db_session():
 
     transaction = connection.begin()
 
-    session = TestingSessionLocal(
-        bind=connection
-    )
+    session = TestingSessionLocal(bind=connection)
 
     yield session
 
@@ -52,7 +44,6 @@ def db_session():
 
 @pytest.fixture
 def client(db_session):
-
     def override_get_db():
         try:
             yield db_session
