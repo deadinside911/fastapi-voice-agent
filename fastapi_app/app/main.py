@@ -1,3 +1,6 @@
+"""
+FastAPI voice QA app
+"""
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -8,6 +11,8 @@ loaded = load_dotenv(dotenv_path=path)
 
 from typing import Annotated
 from fastapi import FastAPI, Depends
+from fastapi.responses import JSONResponse
+
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.database import get_session
@@ -19,7 +24,6 @@ from routes.chat import router as chat_router
 
 from sockets.status import router as status_router
 
-from services import client
 
 app = FastAPI()
 
@@ -31,14 +35,6 @@ app.include_router(webhooks_router)
 app.include_router(status_router)
 app.include_router(chat_router)
 
-@app.get("/hello-world")
+@app.get("/")
 async def hello(session: Annotated[AsyncSession, Depends(get_session)]):
-    return {"message": "hello,world!"}
-
-
-@app.get("/generate")
-def generate():
-    response = client.models.generate_content(
-        model="gemini-2.5-flash", contents="Write one line about any topic"
-    )
-    return {"text": response.text}
+    return JSONResponse("go to /docs", status_code=200)

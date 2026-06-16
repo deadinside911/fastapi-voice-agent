@@ -30,7 +30,8 @@ class PerformanceAnalyticsRecord(SQLModel, table=True):
 
 class ChatHistory(SQLModel, table=True):
     id: Annotated[int | None, Field(default=None, primary_key=True)]
-
+    conversation_id: Annotated[str, Field(index=True)]  
+    
     role: Annotated[str, Field()]
-
     content: Annotated[str, Field()]
+    created_at: Annotated[datetime | None, Field(default=datetime.now())] 
