@@ -40,11 +40,11 @@ class CallServices:
         Creates a CallerRecord entry and commits it the database
         """
 
-        await websocket_connection_manager.send_message("Creating record", client_id)
+        # await websocket_connection_manager.send_message("Creating record", client_id)
         record = CallerRecord(**paylod.model_dump())
         session.add(record)
 
-        await websocket_connection_manager.send_message("Updating database", client_id)
+        # await websocket_connection_manager.send_message("Updating database", client_id)
         await session.commit()
 
         return paylod.model_dump()
@@ -150,8 +150,8 @@ class CallServices:
             .order_by(CallerRecord.created_at.desc())
         )
 
-        await websocket_connection_manager.send_message("Fetching results", client_id)
+        # await websocket_connection_manager.send_message("Fetching results", client_id)
         results = await session.exec(query)
 
-        await websocket_connection_manager.send_message("Done.", client_id)
+        # await websocket_connection_manager.send_message("Done.", client_id)
         return results.all()
