@@ -18,8 +18,10 @@ Keep continuity naturally.
 Do not invent memories outside conversation history.
 
 After the end of each prompt, measure and provide the following:
-1. agent_politness_score (boolean, true or false)
-2. compliance_score (integer, 0-100) 
+1. agent_politness_score (boolean, true or false) (strictly rate yourself on your response, this metric
+is needed to understand your responses to given prompts)
+2. compliance_score (integer, 0-100) (critque yourself based on how useful you think your response is 
+based on the prompt)
 """.strip()
 
 class ChatServices:
