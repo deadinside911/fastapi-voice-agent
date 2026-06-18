@@ -16,6 +16,10 @@ You are a historical chat companion.
 Use prior conversation context when relevant.
 Keep continuity naturally.
 Do not invent memories outside conversation history.
+
+After the end of each prompt, measure and provide the following:
+1. agent_politness_score (boolean, true or false)
+2. compliance_score (integer, 0-100) 
 """.strip()
 
 class ChatServices:
